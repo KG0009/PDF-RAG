@@ -33,6 +33,9 @@ from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel, Field
 from starlette.middleware.sessions import SessionMiddleware
 
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
 
 # ==================================================
 # 1. CONFIGURATION
@@ -86,6 +89,13 @@ app.add_middleware(
     max_age=60 * 60 * 24 * 30
 )
 
+FRONTEND_DIR = ROOT / "frontend"
+
+app.mount(
+    "/static",
+    StaticFiles(directory=str(FRONTEND_DIR)),
+    name="static"
+)
 
 # ==================================================
 # 3. FIREBASE CONNECTION
@@ -304,14 +314,9 @@ def check_rate_limit(user_id):
 # 9. HEALTH CHECK
 # ==================================================
 
-@app.get("/")
+@app.get("/", include_in_schema=False)
 def home():
-    return {
-        "name": "Bhumi Vikas Sahayak",
-        "status": "running",
-        "message": "FastAPI backend is running.",
-        "docs": "/docs"
-    }
+    return FileResponse(FRONTEND_DIR / "index.html")
 
 
 @app.get("/api/health")
@@ -653,3 +658,19 @@ def delete_chat(
     transaction = database.transaction()
 
     return delete_transaction(transaction)
+
+
+@app.get("/source/english.pdf")
+def source_pdf():
+    pdf_path = ROOT / "data" / "bvn06032025E.pdf"
+
+    if not pdf_path.is_file():
+        raise HTTPException(
+            status_code=404,
+            detail="Source PDF not found."
+        )
+
+    return FileResponse(
+        pdf_path,
+        media_type="application/pdf"
+    )
