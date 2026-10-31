@@ -1,3 +1,11 @@
+"""Bhumi Vikas Sahayak — FastAPI + Gemini RAG + Firebase Authentication/Firestore.
+
+Run from project root: python -m uvicorn src.api:app --reload
+
+Requires .env with FIREBASE_WEB_API_KEY and GOOGLE_APPLICATION_CREDENTIALS.
+GEMINI_API_KEY may be set in .env or in the shell launching Uvicorn.
+"""
+
 import json
 import logging
 import os
@@ -175,6 +183,7 @@ class PasswordReset(BaseModel):
 
 class QuestionRequest(BaseModel):
     question: str = Field(min_length=1, max_length=2000)
+    chat_id: str | None = Field(default=None, pattern=r"^[a-f0-9]{32}$")
 
 
 class ChatCitation(BaseModel):
@@ -273,8 +282,21 @@ def ask(data: QuestionRequest, request: Request, user: dict = Depends(current_us
     if not question:
         raise HTTPException(400, "Question cannot be empty.")
     rate_limit(f"ask:{user['uid']}", 8, 60)
+
+    # Read history from Firestore using the authenticated user's UID.
+    # The browser only supplies a chat ID, never authoritative history.
+    history = []
+    if data.chat_id is not None:
+        chat = next(
+            (c for c in read_chats(user["uid"]) if c["id"] == data.chat_id),
+            None,
+        )
+        if chat is None:
+            raise HTTPException(404, "Conversation not found.")
+        history = chat.get("messages", [])[-6:]
+
     try:
-        result = generator().generate(question, top_k=5)
+        result = generator().generate(question, top_k=5, history=history)
     except gemini_errors.ClientError as exc:
         if exc.code == 429:
             raise HTTPException(429, "Gemini usage limit reached. Try again later.") from exc
