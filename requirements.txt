@@ -3,3 +3,10 @@ faiss-cpu
 numpy
 google-genai
 pydantic
+firebase-admin
+python-dotenv
+fastapi
+uvicorn[standard]
+itsdangerous
+httpx
+email-validator
