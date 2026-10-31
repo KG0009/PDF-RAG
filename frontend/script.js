@@ -1,6 +1,3 @@
-/* Bhumi Vikas Sahayak — Vanilla JavaScript frontend.
-   Uses only FastAPI endpoints; no Gemini or Firebase keys in this file. */
-
 const $ = (id) => document.getElementById(id);
 const ui = {
   sidebar: $('sidebar'), overlay: $('sidebar-overlay'), chatList: $('chat-list'),
@@ -288,7 +285,7 @@ async function sendQuestion(text) {
   try {
     const result = await request('/api/ask', {
       method: 'POST',
-      body: JSON.stringify({ question, chat_id: currentChatId })
+      body: JSON.stringify({ question })
     });
     messages.push({
       role: 'assistant',
