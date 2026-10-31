@@ -154,7 +154,13 @@ def establish_session(id_token: str, response: Response) -> dict:
         samesite="strict",
         path="/",
     )
-    return {"authenticated": True, "uid": claims["uid"], "email": claims.get("email", "")}
+    profile = auth.get_user(claims["uid"])
+    return {
+        "authenticated": True,
+        "uid": claims["uid"],
+        "email": claims.get("email", ""),
+        "name": profile.display_name or "",
+    }
 
 
 def current_user(request: Request) -> dict:
@@ -175,6 +181,14 @@ def current_user(request: Request) -> dict:
 class Credentials(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8, max_length=128)
+
+
+class RegistrationCredentials(Credentials):
+    full_name: str = Field(min_length=2, max_length=80)
+
+
+class ProfileUpdate(BaseModel):
+    full_name: str = Field(min_length=2, max_length=80)
 
 
 class PasswordReset(BaseModel):
@@ -228,14 +242,34 @@ def health():
 # --------------------------- Login ---------------------------
 
 @app.post("/api/auth/register", status_code=201)
-def register(data: Credentials, response: Response, request: Request):
+def register(data: RegistrationCredentials, response: Response, request: Request):
     check_origin(request)
     rate_limit(f"register:{client_key(request)}", 5, 3600)
+
+    # Whitespace normalization prevents awkward avatars/profile labels.
+    full_name = " ".join(data.full_name.split())
+    if len(full_name) < 2 or not any(character.isalpha() for character in full_name):
+        raise HTTPException(422, "Enter a valid full name.")
+
     payload = firebase_auth_call("signUp", {
         "email": str(data.email),
         "password": data.password,
         "returnSecureToken": True,
     })
+
+    # Store the name on the Firebase Auth user, not in browser storage.
+    # Firestore conversations continue to belong to the same Firebase UID.
+    db()  # Initialize Firebase Admin SDK.
+    try:
+        auth.update_user(payload["localId"], display_name=full_name)
+    except Exception as exc:
+        logger.exception("Failed to save new account display name")
+        raise HTTPException(
+            503,
+            "The account was created, but its display name could not be saved. "
+            "Please sign in and contact the administrator."
+        ) from exc
+
     return establish_session(payload["idToken"], response)
 
 
@@ -260,7 +294,29 @@ def logout(response: Response, request: Request):
 
 @app.get("/api/auth/me")
 def me(user: dict = Depends(current_user)):
-    return {"authenticated": True, **user}
+    # Look up the current Auth profile so a refresh preserves the name.
+    profile = auth.get_user(user["uid"])
+    return {"authenticated": True, **user, "name": profile.display_name or ""}
+
+
+@app.patch("/api/auth/profile")
+def update_profile(
+    data: ProfileUpdate,
+    request: Request,
+    user: dict = Depends(current_user),
+):
+    """Allow existing accounts to set or change their display name."""
+    check_origin(request)
+    rate_limit(f"profile:{user['uid']}", 10, 3600)
+    full_name = " ".join(data.full_name.split())
+    if len(full_name) < 2 or not any(c.isalpha() for c in full_name):
+        raise HTTPException(422, "Enter a valid full name.")
+    try:
+        auth.update_user(user["uid"], display_name=full_name)
+    except Exception as exc:
+        logger.exception("Failed to update Firebase display name")
+        raise HTTPException(503, "Could not update your name. Try again later.") from exc
+    return {"authenticated": True, **user, "name": full_name}
 
 
 @app.post("/api/auth/password-reset")
