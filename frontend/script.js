@@ -288,7 +288,7 @@ async function sendQuestion(text) {
   try {
     const result = await request('/api/ask', {
       method: 'POST',
-      body: JSON.stringify({ question })
+      body: JSON.stringify({ question, chat_id: currentChatId })
     });
     messages.push({
       role: 'assistant',
