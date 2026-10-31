@@ -9,11 +9,16 @@ const ui = {
   form: $('chat-form'), input: $('question'), send: $('send-button'),
   notice: $('notice'), saveStatus: $('save-status'), themeToggle: $('theme-toggle'),
   authScreen: $('auth-screen'), appShell: $('app-shell'), authForm: $('auth-form'),
+  authNameField: $('auth-name-field'), authName: $('auth-name'),
   authEmail: $('auth-email'), authPassword: $('auth-password'),
   authError: $('auth-error'), authSubmit: $('auth-submit'),
   authTitle: $('auth-title'), authDescription: $('auth-description'),
   authSwitch: $('auth-switch'), authSwitchLabel: $('auth-switch-label'),
-  authReset: $('auth-reset'), signOut: $('sign-out'), accountEmail: $('account-email')
+  authReset: $('auth-reset'), signOut: $('sign-out'), accountEmail: $('account-email'),
+  editProfile: $('edit-profile'), profileDialog: $('profile-dialog'),
+  profileForm: $('profile-form'), profileName: $('profile-name'),
+  profileError: $('profile-error'), profileCancel: $('profile-cancel'),
+  profileSave: $('profile-save')
 };
 
 let currentChatId = null;
@@ -21,6 +26,20 @@ let messages = [];
 let busy = false;
 let authenticated = false;
 let authMode = 'login';
+let userDisplayName = '';
+let userEmail = '';
+let userInitials = 'U';
+
+function initialsFromName(name, email = '') {
+  const words = String(name || '').trim().split(/\s+/).filter(Boolean);
+  if (words.length >= 2) {
+    return (Array.from(words[0])[0] + Array.from(words[words.length - 1])[0]).toLocaleUpperCase();
+  }
+  if (words.length === 1) return Array.from(words[0])[0].toLocaleUpperCase();
+  const localPart = String(email).split('@')[0];
+  return Array.from(localPart)[0]?.toLocaleUpperCase() || 'U';
+}
+
 const MAX_SAVED_MESSAGES = 60;  // Matches src/api.py
 
 async function request(path, options = {}) {
@@ -53,6 +72,66 @@ function el(tag, className, text) {
   return node;
 }
 
+// Render Markdown inline formatting using safe DOM nodes, never raw innerHTML.
+// Supports **bold**, __bold__, *italic*, _italic_ and `inline code`.
+function appendInlineFormatting(parent, text) {
+  const pattern = /(\*\*(.+?)\*\*|__(.+?)__|`([^`]+)`|\*([^*\n]+)\*|_([^_\n]+)_)/g;
+  let lastIndex = 0;
+
+  for (const match of text.matchAll(pattern)) {
+    const index = match.index;
+    if (index > lastIndex) {
+      parent.append(document.createTextNode(text.slice(lastIndex, index)));
+    }
+
+    if (match[2] !== undefined || match[3] !== undefined) {
+      parent.append(el('strong', '', match[2] ?? match[3]));
+    } else if (match[4] !== undefined) {
+      parent.append(el('code', '', match[4]));
+    } else {
+      parent.append(el('em', '', match[5] ?? match[6]));
+    }
+    lastIndex = index + match[0].length;
+  }
+
+  parent.append(document.createTextNode(text.slice(lastIndex)));
+}
+
+function renderReadableAnswer(text) {
+  const wrap = el('div', 'answer-rich');
+  let activeList = null;
+  let listKind = null;
+  for (const line of text.replace(/\r\n/g, '\n').split('\n')) {
+    if (!line.trim()) {
+      activeList = null;
+      listKind = null;
+      wrap.append(el('div', 'answer-gap'));
+      continue;
+    }
+    const bullet = line.match(/^\s*[-•*]\s+(.+)$/);
+    const numbered = line.match(/^\s*\d+[.)]\s+(.+)$/);
+    if (bullet || numbered) {
+      const kind = numbered ? 'ol' : 'ul';
+      if (kind !== listKind || !activeList) {
+        activeList = document.createElement(kind);
+        wrap.append(activeList);
+        listKind = kind;
+      }
+      const li = document.createElement('li');
+      appendInlineFormatting(li, (bullet || numbered)[1]);
+      activeList.append(li);
+      continue;
+    }
+    activeList = null;
+    listKind = null;
+    const heading = line.match(/^\s*#{1,3}\s+(.+)$/);
+    const paragraph = el(heading ? 'h3' : 'p', '', '');
+    appendInlineFormatting(paragraph, heading ? heading[1] : line);
+    wrap.append(paragraph);
+  }
+  return wrap;
+}
+
 function showNotice(text = '') {
   ui.notice.hidden = !text;
   ui.notice.textContent = text;
@@ -72,6 +151,8 @@ function setBusy(value) {
 function updateSendButton() { ui.send.disabled = busy || !authenticated || !ui.input.value.trim(); }
 
 function scrollBottom() {
+  // Do not scroll the welcome dashboard out of view on initial login.
+  if (!messages.length && !busy) return;
   requestAnimationFrame(() => {
     ui.chatScroll.scrollTop = ui.chatScroll.scrollHeight;
   });
@@ -129,16 +210,24 @@ function renderSources(citations) {
 function renderMessages() {
   ui.welcome.hidden = messages.length > 0;
   ui.messages.replaceChildren();
+  if (!messages.length) ui.chatScroll.scrollTop = 0;
 
   messages.forEach((message) => {
     const isUser = message.role === 'user';
     const row = el('article', `message ${isUser ? 'user' : 'assistant'}`);
-    row.append(el('div', `assistant-avatar ${isUser ? 'user-avatar' : ''}`, isUser ? 'YOU' : 'भू'));
+    row.append(el('div', `assistant-avatar ${isUser ? 'user-avatar' : ''}`, isUser ? userInitials : 'भू'));
 
     const body = el('div', 'message-body');
-    body.append(el('div', 'message-heading', isUser ? 'YOU' : 'BHUMI VIKAS SAHAYAK'));
-    // textContent safely displays model output without interpreting HTML.
-    body.append(el('div', 'message-bubble', String(message.text || '')));
+    body.append(el('div', 'message-heading', isUser ? (userDisplayName || 'YOU').toLocaleUpperCase() : 'BHUMI VIKAS SAHAYAK'));
+    // Format assistant answers as readable paragraphs/lists without parsing HTML.
+    // Every fragment uses textContent: model text cannot inject markup/scripts.
+    const bubble = el('div', 'message-bubble');
+    if (isUser) {
+      bubble.textContent = String(message.text || '');
+    } else {
+      bubble.append(renderReadableAnswer(String(message.text || '')));
+    }
+    body.append(bubble);
 
     if (!isUser) {
       const meta = el('div', 'message-meta');
@@ -377,13 +466,20 @@ function showLogin() {
   ui.messages.replaceChildren();
   ui.input.value = '';
   ui.accountEmail.textContent = '';
+  userDisplayName = '';
+  userEmail = '';
+  userInitials = 'U';
   setBusy(false);
   setAuthError();
 }
 
 function showApp(user) {
   authenticated = true;
-  ui.accountEmail.textContent = user.email || 'My account';
+  userDisplayName = String(user.name || '').trim();
+  userEmail = user.email || '';
+  userInitials = initialsFromName(userDisplayName, userEmail);
+  ui.accountEmail.textContent = userDisplayName || user.email || 'My account';
+  ui.accountEmail.title = user.email || 'Signed-in account';
   ui.authScreen.hidden = true;
   ui.appShell.hidden = false;
   ui.authPassword.value = '';
@@ -407,6 +503,8 @@ function setAuthMode(mode) {
   ui.authSwitchLabel.textContent = signup ? 'Already have an account?' : 'New to Bhumi Vikas Sahayak?';
   ui.authSwitch.textContent = signup ? 'Sign in' : 'Create an account';
   ui.authPassword.autocomplete = signup ? 'new-password' : 'current-password';
+  ui.authNameField.hidden = !signup;
+  ui.authName.required = signup;
   ui.authReset.hidden = signup;
   setAuthError();
 }
@@ -419,13 +517,21 @@ ui.authForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   const email = ui.authEmail.value.trim();
   const password = ui.authPassword.value;
+  const fullName = ui.authName.value.trim().replace(/\s+/g, ' ');
   if (!email || !password) return;
+  if (authMode === 'register' && fullName.length < 2) {
+    setAuthError('Enter your full name.');
+    return;
+  }
   ui.authSubmit.disabled = true;
   ui.authSubmit.textContent = authMode === 'login' ? 'Signing in…' : 'Creating account…';
   setAuthError();
   try {
     const user = await request(`/api/auth/${authMode}`, {
-      method: 'POST', body: JSON.stringify({ email, password })
+      method: 'POST', body: JSON.stringify({
+        email, password,
+        ...(authMode === 'register' ? { full_name: fullName } : {})
+      })
     });
     showApp(user);
   } catch (error) {
@@ -433,6 +539,45 @@ ui.authForm.addEventListener('submit', async (event) => {
   } finally {
     ui.authSubmit.disabled = false;
     ui.authSubmit.textContent = authMode === 'login' ? 'Sign in' : 'Create account';
+  }
+});
+
+// Existing users can add a name without creating another account.
+ui.editProfile.addEventListener('click', () => {
+  if (!authenticated) return;
+  ui.profileName.value = userDisplayName;
+  ui.profileError.hidden = true;
+  ui.profileError.textContent = '';
+  ui.profileDialog.showModal();
+  ui.profileName.focus();
+});
+ui.profileCancel.addEventListener('click', () => ui.profileDialog.close());
+ui.profileForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const fullName = ui.profileName.value.trim().replace(/\s+/g, ' ');
+  if (fullName.length < 2) {
+    ui.profileError.textContent = 'Enter your full name.';
+    ui.profileError.hidden = false;
+    return;
+  }
+  ui.profileSave.disabled = true;
+  ui.profileError.hidden = true;
+  try {
+    const profile = await request('/api/auth/profile', {
+      method: 'PATCH', body: JSON.stringify({ full_name: fullName })
+    });
+    userDisplayName = profile.name || '';
+    userEmail = profile.email || userEmail;
+    userInitials = initialsFromName(userDisplayName, userEmail);
+    ui.accountEmail.textContent = userDisplayName || userEmail;
+    ui.accountEmail.title = userEmail;
+    renderMessages();
+    ui.profileDialog.close();
+  } catch (error) {
+    ui.profileError.textContent = error.message;
+    ui.profileError.hidden = false;
+  } finally {
+    ui.profileSave.disabled = false;
   }
 });
 
@@ -470,3 +615,60 @@ request('/api/auth/me').then(showApp).catch((error) => {
     setAuthError(error.message);
   }
 });
+
+
+/* ------------------ Intro logo reveal + keyboard shortcuts ------------------ */
+(function initializeIntro() {
+  const intro = $('intro-screen');
+  const skip = $('intro-skip');
+  if (!intro) return;
+  let seen = false;
+  try { seen = sessionStorage.getItem('bvs_intro_seen') === '1'; } catch { /* storage disabled */ }
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let dismissed = false;
+  if (seen || reducedMotion) {
+    intro.hidden = true;
+  }
+  const dismiss = () => {
+    if (dismissed) return;
+    dismissed = true;
+    intro.classList.add('is-leaving');
+    try { sessionStorage.setItem('bvs_intro_seen', '1'); } catch { /* ignore */ }
+    // Ensure the overlay is removed even if transitionend does not fire.
+    window.setTimeout(() => { intro.hidden = true; }, 650);
+  };
+  skip.addEventListener('click', dismiss);
+  if (!seen && !reducedMotion) window.setTimeout(dismiss, 2250);
+
+  // Replay is useful for reviewing the logo animation during UI development.
+  const replay = $('replay-intro');
+  replay?.addEventListener('click', () => {
+    closeSidebar();
+    dismissed = false;
+    intro.hidden = true;
+    intro.classList.remove('is-leaving');
+    // Force the element to re-enter layout to restart CSS animations.
+    void intro.offsetWidth;
+    intro.hidden = false;
+    window.setTimeout(dismiss, 2250);
+  });
+})();
+
+// Keeps the workspace pleasant to use without adding dependencies.
+document.addEventListener('keydown', (event) => {
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+    if (authenticated) {
+      event.preventDefault();
+      ui.input.focus();
+    }
+  }
+  if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key.toLowerCase() === 'o') {
+    if (authenticated && !busy) {
+      event.preventDefault();
+      newConversation();
+    }
+  }
+});
+
+const yearTarget = $('current-year');
+if (yearTarget) yearTarget.textContent = String(new Date().getFullYear());

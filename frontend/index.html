@@ -3,64 +3,100 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#f8fafc" />
-  <meta name="description" content="Bhumi Vikas Sahayak — an AI assistant for Madhya Pradesh building development rules." />
-  <title>Bhumi Vikas Sahayak</title>
+  <meta name="theme-color" content="#f6f7f4" />
+  <meta name="description" content="Bhumi Vikas Sahayak — a research assistant for the Madhya Pradesh Bhumi Vikas Rules." />
+  <title>Bhumi Vikas Sahayak — Rules, made clearer.</title>
   <link rel="stylesheet" href="/static/style.css" />
   <script src="/static/script.js" defer></script>
 </head>
 <body>
-  <!-- Login is shown until the server confirms a Firebase session. -->
+  <!-- Pure CSS 3D brand reveal: no image, WebGL or extra library required. -->
+  <div class="intro-screen" id="intro-screen" role="status" aria-label="Opening Bhumi Vikas Sahayak">
+    <div class="intro-glow" aria-hidden="true"></div>
+    <div class="intro-stage" aria-hidden="true">
+      <div class="intro-orbit orbit-one"></div>
+      <div class="intro-orbit orbit-two"></div>
+      <div class="intro-tile"><span class="intro-glyph">भू</span><span class="intro-tile-shine"></span></div>
+    </div>
+    <div class="intro-wordmark">
+      <p>BHUMI VIKAS</p>
+      <h2>SAHAYAK<span>.</span></h2>
+      <small>RULES, MADE CLEARER</small>
+    </div>
+    <div class="intro-progress" aria-hidden="true"><span></span></div>
+    <button class="intro-skip" id="intro-skip" type="button">Skip intro <span aria-hidden="true">↗</span></button>
+  </div>
+
+  <!-- Authentication: original Firebase-powered endpoints are unchanged. -->
   <section class="auth-screen" id="auth-screen" aria-labelledby="auth-title">
-    <div class="auth-card">
-      <div class="auth-mark" aria-hidden="true">भू</div>
-      <p class="auth-overline">BHUMI VIKAS SAHAYAK</p>
-      <h1 id="auth-title">Welcome back</h1>
-      <p class="auth-description" id="auth-description">Sign in to access your private rulebook conversations.</p>
-      <form id="auth-form" class="auth-form">
-        <label for="auth-email">Email address</label>
-        <input id="auth-email" type="email" name="email" autocomplete="email" maxlength="254" placeholder="you@example.com" required />
-        <label for="auth-password">Password</label>
-        <input id="auth-password" type="password" name="password" autocomplete="current-password" minlength="8" maxlength="128" placeholder="At least 8 characters" required />
-        <button type="submit" class="auth-submit" id="auth-submit">Sign in</button>
-      </form>
-      <p id="auth-error" class="auth-error" role="alert" hidden></p>
-      <button type="button" class="auth-link" id="auth-reset">Forgot password?</button>
-      <div class="auth-divider"></div>
-      <p class="auth-switch-line"><span id="auth-switch-label">New to Bhumi Vikas Sahayak?</span> <button type="button" class="auth-link" id="auth-switch">Create an account</button></p>
+    <div class="auth-showcase">
+      <div class="showcase-top"><span class="showcase-symbol">भू</span><span>BHUMI VIKAS <strong>SAHAYAK</strong></span></div>
+      <div class="showcase-center" aria-hidden="true">
+        <div class="showcase-grid"></div>
+        <div class="showcase-orbit"></div>
+        <div class="showcase-plate"><span>भू</span></div>
+        <div class="showcase-coordinate">23°15′ N<br/>77°24′ E</div>
+      </div>
+      <div class="showcase-bottom">
+        <span class="showcase-eyebrow"><i></i> INTELLIGENT RULEBOOK ASSISTANT</span>
+        <h2>Built for clarity.<br /><em>Grounded in rules.</em></h2>
+        <p>Research building regulations with precise references to the Madhya Pradesh Bhumi Vikas Rules.</p>
+        <div class="showcase-footer"><span>MP BHUMI VIKAS RULES, 2012</span><span>ENGLISH + हिंदी</span></div>
+      </div>
+    </div>
+
+    <div class="auth-side">
+      <div class="auth-mobile-brand"><span class="auth-mark" aria-hidden="true">भू</span><strong>Bhumi Vikas Sahayak</strong></div>
+      <div class="auth-card">
+        <div class="auth-kicker"><span class="auth-kicker-line"></span> SECURE WORKSPACE</div>
+        <h1 id="auth-title">Welcome back<span class="heading-period">.</span></h1>
+        <p class="auth-description" id="auth-description">Sign in to continue your research and access your saved conversations.</p>
+        <form id="auth-form" class="auth-form">
+          <div id="auth-name-field" hidden>
+            <label for="auth-name">Full name</label>
+            <div class="field-wrap"><input id="auth-name" type="text" name="name" autocomplete="name" maxlength="80" placeholder="e.g. Kanav Goel" /></div>
+          </div>
+          <label for="auth-email">Email address</label>
+          <div class="field-wrap"><input id="auth-email" type="email" name="email" autocomplete="email" maxlength="254" placeholder="you@example.com" required /></div>
+          <div class="field-label-line"><label for="auth-password">Password</label><button type="button" class="auth-link" id="auth-reset">Forgot password?</button></div>
+          <div class="field-wrap"><input id="auth-password" type="password" name="password" autocomplete="current-password" minlength="8" maxlength="128" placeholder="At least 8 characters" required /></div>
+          <button type="submit" class="auth-submit" id="auth-submit">Sign in <span aria-hidden="true">↗</span></button>
+        </form>
+        <p id="auth-error" class="auth-error" role="alert" hidden></p>
+        <div class="auth-divider"><span>YOUR PERSONAL RESEARCH SPACE</span></div>
+        <p class="auth-switch-line"><span id="auth-switch-label">New to Bhumi Vikas Sahayak?</span> <button type="button" class="auth-link" id="auth-switch">Create an account</button></p>
+        <div class="auth-secure-note"><span aria-hidden="true">◈</span> Your saved chats are linked to your account.</div>
+      </div>
+      <p class="auth-side-footer">© <span id="current-year">2026</span> BHUMI VIKAS SAHAYAK <span>·</span> INFORMATIONAL ASSISTANT</p>
     </div>
   </section>
+
+  <!-- Main application -->
   <div class="app-shell" id="app-shell" hidden>
     <div id="sidebar-overlay" class="sidebar-overlay" hidden></div>
-
     <aside class="sidebar" id="sidebar" aria-label="Conversation sidebar">
       <div class="sidebar-brand">
         <div class="brand-mark" aria-hidden="true">भू</div>
-        <div class="brand-copy"><strong>Bhumi Vikas</strong><span>SAHAYAK · AI ASSISTANT</span></div>
+        <div class="brand-copy"><strong>Bhumi Vikas</strong><span>SAHAYAK <b class="brand-dot">•</b> AI WORKSPACE</span></div>
         <button type="button" class="icon-button sidebar-close" id="close-sidebar" aria-label="Close sidebar">×</button>
       </div>
 
       <button type="button" class="new-chat-button" id="new-chat">
-        <span class="new-chat-symbol" aria-hidden="true">＋</span>
-        New conversation
-        <span class="new-chat-shortcut" aria-hidden="true">↗</span>
+        <span class="new-chat-symbol" aria-hidden="true">＋</span><span>New conversation</span><span class="new-chat-shortcut" aria-hidden="true">↗</span>
       </button>
 
-      <div class="history-heading">
-        <span>YOUR CONVERSATIONS</span>
-        <span id="chat-count" class="history-count">0 / 10</span>
-      </div>
+      <div class="history-heading"><span>RECENT RESEARCH</span><span id="chat-count" class="history-count">0 / 10</span></div>
       <nav id="chat-list" class="chat-list" aria-label="Saved conversations">
-        <p class="history-placeholder">Loading chat history…</p>
+        <p class="history-placeholder">Loading your conversations…</p>
       </nav>
 
       <div class="sidebar-bottom">
-        <div class="document-mini">
-          <span class="document-mini-icon" aria-hidden="true">▤</span>
-          <div><strong>Source library</strong><small>MP Bhumi Vikas Rules, 2012</small></div>
-        </div>
-        <a class="sidebar-document-link" href="/source/english.pdf" target="_blank" rel="noopener noreferrer">View consolidated PDF <span aria-hidden="true">↗</span></a>
-        <p class="sidebar-version">Consolidated through 06 March 2025</p>
+        <div class="library-label">YOUR KNOWLEDGE SOURCE</div>
+        <div class="document-mini"><span class="document-mini-icon" aria-hidden="true">▤</span><div><strong>Bhumi Vikas Rules</strong><small>2012 · Consolidated March 2025</small></div></div>
+        <a class="sidebar-document-link" href="/source/english.pdf" target="_blank" rel="noopener noreferrer">Open source document <span aria-hidden="true">↗</span></a>
+        <button type="button" id="replay-intro" class="replay-intro-button">↻ <span>Replay opening animation</span></button>
+        <div class="sidebar-separator"></div>
+        <div class="sidebar-legal"><span class="legal-icon">✦</span><span>Grounded in the published rulebook. Check official amendments before acting.</span></div>
       </div>
     </aside>
 
@@ -68,59 +104,79 @@
       <header class="topbar">
         <div class="topbar-left">
           <button type="button" class="icon-button menu-button" id="open-sidebar" aria-label="Open sidebar">☰</button>
-          <div class="topbar-heading">
-            <span class="breadcrumb">KNOWLEDGE WORKSPACE <span aria-hidden="true">/</span> CHAT</span>
-            <h1>Bhumi Vikas Sahayak</h1>
-          </div>
+          <div class="topbar-heading"><span class="breadcrumb">WORKSPACE <span aria-hidden="true">/</span> RULEBOOK ASSISTANT</span><h1>Bhumi Vikas <span>Sahayak</span></h1></div>
         </div>
         <div class="topbar-actions">
-          <span class="availability"><span class="availability-dot"></span><span id="save-status">Ready</span></span>
-          <span class="account-label" id="account-email" title="Signed-in account"></span>
-          <button type="button" class="signout-button" id="sign-out">Sign out</button>
+          <span class="availability" aria-label="Chat status"><span class="availability-dot"></span><span id="save-status">Ready</span></span>
           <button type="button" class="icon-button theme-button" id="theme-toggle" aria-label="Switch to dark mode" title="Toggle theme">☾</button>
+          <div class="account-area"><span class="account-label" id="account-email" title="Signed-in account"></span><button type="button" class="edit-profile-button" id="edit-profile" title="Edit profile name" aria-label="Edit your display name">✎</button><button type="button" class="signout-button" id="sign-out">Sign out <span aria-hidden="true">↗</span></button></div>
         </div>
       </header>
 
       <main class="chat-scroll" id="chat-scroll">
         <div class="chat-content">
           <section class="welcome" id="welcome">
-            <div class="hero-emblem" aria-hidden="true"><span>भू</span><i></i></div>
-            <div class="eyebrow"><span class="eyebrow-dot"></span> YOUR REGULATORY RESEARCH ASSISTANT</div>
-            <h2>Building rules,<br /><span>made clearer.</span></h2>
-            <p class="welcome-description">Get answers grounded in the Madhya Pradesh Bhumi Vikas Rules. Explore provisions, understand definitions, and review references—all in one place.</p>
-            <p class="language-note">Ask in English or हिंदी</p>
-            <div class="suggestion-grid">
-              <button type="button" class="suggestion" data-question="What is Floor Area Ratio (FAR) under the MP Bhumi Vikas Rules?">
-                <span class="suggestion-symbol">▦</span><strong>Floor Area Ratio</strong><small>Understand the FAR definition</small><span class="suggestion-arrow">↗</span>
-              </button>
-              <button type="button" class="suggestion" data-question="What do the rules say about building setbacks?">
-                <span class="suggestion-symbol">⌗</span><strong>Building setbacks</strong><small>Find applicable provisions</small><span class="suggestion-arrow">↗</span>
-              </button>
-              <button type="button" class="suggestion" data-question="Explain the rules relating to building height.">
-                <span class="suggestion-symbol">▥</span><strong>Building height</strong><small>Explore height regulations</small><span class="suggestion-arrow">↗</span>
-              </button>
-              <button type="button" class="suggestion" data-question="भवन निर्माण अनुमति के लिए कौन से नियम लागू होते हैं?">
-                <span class="suggestion-symbol">अ</span><strong>हिंदी में पूछें</strong><small>निर्माण अनुमति संबंधी प्रश्न</small><span class="suggestion-arrow">↗</span>
-              </button>
+            <div class="welcome-topline"><span class="topline-cross" aria-hidden="true">✳</span> YOUR RULEBOOK RESEARCH DESK <span class="welcome-topline-no">EST. 2012</span></div>
+            <div class="welcome-hero-grid">
+              <div class="welcome-copy">
+                <span class="welcome-pill"><span></span> POWERED BY GROUNDED AI</span>
+                <h2>Better answers.<br/><em>Stronger decisions.</em></h2>
+                <p class="welcome-description">Navigate the Madhya Pradesh Bhumi Vikas Rules with clarity. Ask questions, explore provisions, and trace every answer back to its source.</p>
+                <div class="welcome-mini-stats"><span><b>01</b> ASK IN PLAIN LANGUAGE</span><span><b>02</b> VERIFY THE SOURCE</span></div>
+              </div>
+              <div class="welcome-art" aria-hidden="true">
+                <div class="blueprint-lines"></div>
+                <div class="welcome-art-ring"></div>
+                <div class="welcome-art-ruler"></div>
+                <div class="art-tile"><span>भू</span></div>
+                <div class="art-label art-label-top">RULE-BASED<br/>REASONING</div>
+                <div class="art-label art-label-bottom">MP · 2012 <span>↗</span></div>
+              </div>
             </div>
+            <div class="prompts-header"><div><span class="prompt-header-symbol">✦</span> START WITH A QUESTION</div><span>SELECT A TOPIC TO EXPLORE <span aria-hidden="true">↘</span></span></div>
+            <div class="suggestion-grid">
+              <button type="button" class="suggestion" data-question="What is Floor Area Ratio (FAR) under the MP Bhumi Vikas Rules?"><span class="suggestion-number">01 / DEFINITION</span><strong>Floor Area Ratio</strong><small>Understand how FAR is defined</small><span class="suggestion-arrow" aria-hidden="true">↗</span></button>
+              <button type="button" class="suggestion" data-question="What do the rules say about building setbacks?"><span class="suggestion-number">02 / PROVISIONS</span><strong>Building setbacks</strong><small>Explore applicable requirements</small><span class="suggestion-arrow" aria-hidden="true">↗</span></button>
+              <button type="button" class="suggestion" data-question="Explain the rules relating to building height."><span class="suggestion-number">03 / REGULATIONS</span><strong>Building height</strong><small>Find the relevant rules</small><span class="suggestion-arrow" aria-hidden="true">↗</span></button>
+              <button type="button" class="suggestion" data-question="भवन निर्माण अनुमति के लिए कौन से नियम लागू होते हैं?"><span class="suggestion-number">04 / भाषा</span><strong>हिंदी में पूछें</strong><small>निर्माण अनुमति संबंधी प्रश्न</small><span class="suggestion-arrow" aria-hidden="true">↗</span></button>
+            </div>
+            <div class="welcome-bottom"><span>ENGLISH <span class="welcome-separator">/</span> हिंदी</span><span>OFFICIAL RULEBOOK · CONSOLIDATED TO 06 MAR 2025</span></div>
           </section>
+
           <section id="messages" class="messages" aria-label="Chat messages" aria-live="polite" aria-relevant="additions"></section>
-          <div id="typing-indicator" class="typing-indicator" hidden role="status"><span class="assistant-avatar" aria-hidden="true">भू</span><div class="typing-bubble"><span></span><span></span><span></span><em>Searching the rulebook…</em></div></div>
+          <div id="typing-indicator" class="typing-indicator" hidden role="status"><span class="assistant-avatar" aria-hidden="true">भू</span><div class="typing-bubble"><span></span><span></span><span></span><em>Searching the rulebook and verifying sources…</em></div></div>
         </div>
       </main>
 
       <footer class="composer-zone">
         <div class="composer-inner">
           <div id="notice" class="notice" role="alert" hidden></div>
+          <div class="composer-label"><span class="composer-label-dot"></span> ASK YOUR RESEARCH ASSISTANT <span class="composer-hint">ENGLISH + हिंदी</span></div>
           <form id="chat-form" class="composer">
             <label for="question" class="visually-hidden">Ask a question</label>
-            <textarea id="question" rows="1" maxlength="2000" placeholder="Ask anything about MP Bhumi Vikas Rules…" aria-label="Your question"></textarea>
+            <textarea id="question" rows="1" maxlength="2000" placeholder="Ask a question about the Bhumi Vikas Rules…" aria-label="Your question"></textarea>
             <button id="send-button" type="submit" class="send-button" aria-label="Send message" title="Send message" disabled>➤</button>
           </form>
-          <div class="composer-caption"><span>↵ Enter to send · Shift + Enter for a new line</span><span>Responses may require verification against the official rules.</span></div>
+          <div class="composer-caption"><span><kbd>Enter</kbd> to send <span class="caption-spacer">·</span> <kbd>Shift</kbd> + <kbd>Enter</kbd> for a new line</span><span>For reference only. Verify against the official PDF.</span></div>
         </div>
       </footer>
     </div>
   </div>
+
+  <!-- Profile editor: helpful for accounts registered before name collection. -->
+  <dialog id="profile-dialog" class="profile-dialog" aria-labelledby="profile-title">
+    <form id="profile-form" class="profile-form">
+      <div class="profile-kicker">ACCOUNT SETTINGS</div>
+      <h2 id="profile-title">Your display name</h2>
+      <p>Shown beside your messages. Your initials appear in the avatar.</p>
+      <label for="profile-name">Full name</label>
+      <input id="profile-name" type="text" autocomplete="name" maxlength="80" required placeholder="Your full name" />
+      <p id="profile-error" class="profile-error" role="alert" hidden></p>
+      <div class="profile-actions">
+        <button type="button" id="profile-cancel" class="profile-cancel">Cancel</button>
+        <button type="submit" id="profile-save" class="profile-save">Save name</button>
+      </div>
+    </form>
+  </dialog>
 </body>
 </html>
