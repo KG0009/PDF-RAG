@@ -17,3 +17,6 @@ data/processed/
 # VS Code
 .vscode/
 python-dotenv
+
+*.service-account.json
+*service-account*.json
