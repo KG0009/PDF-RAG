@@ -307,17 +307,44 @@ async function refreshHistory() {
 }
 
 async function loadConversation(id) {
-  if (busy || !authenticated) return;
-  showNotice();
-  try {
-    const chat = await request(`/api/chats/${encodeURIComponent(id)}`);
-    currentChatId = chat.id;
-    messages = Array.isArray(chat.messages) ? chat.messages : [];
-    renderMessages();
-    await refreshHistory();
-    setStatus('Saved Chat');
-    closeSidebar();
-  } catch (error) { showNotice(error.message); }
+    if (busy || !authenticated) return;
+
+    if (window.matchMedia('(max-width: 900px)').matches) {
+        setTimeout(() => {
+            if (window.matchMedia('(max-width: 900px)').matches) {
+                closeSidebar();
+            }
+        }, 300);
+    }
+
+    showNotice();
+
+    try {
+        const chat = await request(
+            `/api/chats/${encodeURIComponent(id)}`
+        );
+
+        currentChatId = chat.id;
+
+        messages = Array.isArray(chat.messages)
+            ? chat.messages
+            : [];
+
+        renderMessages();
+        setStatus('Saved Chat');
+
+        try {
+            await refreshHistory();
+        } catch (error) {
+            console.warn(
+                'Could not refresh chat history:',
+                error.message
+            );
+        }
+
+    } catch (error) {
+        showNotice(error.message);
+    }
 }
 
 function newConversation() {
