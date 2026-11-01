@@ -51,7 +51,7 @@ async function request(path, options = {}) {
       ...options
     });
   } catch {
-    throw new Error('Cannot connect to the server. Is FastAPI running?');
+    throw new Error('Cannot connect to the server.');
   }
 
   const payload = await response.json().catch(() => ({}));
@@ -315,7 +315,7 @@ async function loadConversation(id) {
     messages = Array.isArray(chat.messages) ? chat.messages : [];
     renderMessages();
     await refreshHistory();
-    setStatus('Saved in Firebase');
+    setStatus('Saved Chat');
     closeSidebar();
   } catch (error) { showNotice(error.message); }
 }
@@ -393,7 +393,7 @@ async function sendQuestion(text) {
     renderMessages();
     setStatus('Saving chat…');
     await saveConversation();
-    setStatus('Saved in Firebase');
+    setStatus('Saved');
   } catch (error) {
     if (!answered) {
       // Restore the unsent question so it can be retried.
@@ -406,7 +406,7 @@ async function sendQuestion(text) {
       setStatus('Not saved');
     }
     showNotice(answered
-      ? `Your answer is visible, but Firebase could not save it: ${error.message}`
+      ? `Your answer is visible, but we could not save it: ${error.message}`
       : error.message);
   } finally {
     setBusy(false);
@@ -488,7 +488,7 @@ function showApp(user) {
   renderMessages();
   refreshHistory().catch((error) => {
     ui.chatList.replaceChildren(el('p', 'history-placeholder', 'Saved chats are unavailable.'));
-    showNotice(`Cannot load Firebase chat history: ${error.message}`);
+    showNotice(`Cannot load chat history: ${error.message}`);
   });
 }
 
@@ -497,7 +497,7 @@ function setAuthMode(mode) {
   const signup = mode === 'register';
   ui.authTitle.textContent = signup ? 'Create your account' : 'Welcome back';
   ui.authDescription.textContent = signup
-    ? 'Create an account to keep up to 10 private conversations in Firebase.'
+    ? 'Create an account to keep up to 10 private conversations.'
     : 'Sign in to access your saved rulebook conversations.';
   ui.authSubmit.textContent = signup ? 'Create account' : 'Sign in';
   ui.authSwitchLabel.textContent = signup ? 'Already have an account?' : 'New to Bhumi Vikas Sahayak?';
