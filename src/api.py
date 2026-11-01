@@ -476,3 +476,16 @@ def delete_chat(chat_id: str, request: Request, user: dict = Depends(current_use
         return {"deleted": True, "id": chat_id}
 
     return txn_delete(db().transaction())
+
+@app.middleware("http")
+async def add_security_headers(request, call_next):
+    response = await call_next(request)
+
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Permissions-Policy"] = (
+        "camera=(), microphone=(), geolocation=()"
+    )
+
+    return response
