@@ -69,16 +69,34 @@ def client_key(request: Request) -> str:
 
 
 def check_origin(request: Request) -> None:
-    """Block browser cross-origin mutations (in addition to SameSite cookies).
+    """Allow requests only from explicitly trusted frontend origins."""
 
-    Requests without Origin are allowed for server-side testing. A public
-    deployment should use an explicit trusted-origin setting behind its proxy.
-    """
     origin = request.headers.get("origin")
-    if origin:
-        expected = str(request.base_url).rstrip("/")
-        if origin.rstrip("/") != expected:
-            raise HTTPException(403, "Request origin not allowed.")
+
+    # Requests without an Origin header are allowed
+    # for command-line/server-side testing.
+    if not origin:
+        return
+
+    allowed_origins = {
+        "http://127.0.0.1:8000",
+        "http://localhost:8000",
+    }
+
+    # Additional origins for mobile testing or port forwarding.
+    extra_origins = os.getenv("ALLOWED_ORIGINS", "")
+
+    allowed_origins.update(
+        item.strip().rstrip("/")
+        for item in extra_origins.split(",")
+        if item.strip()
+    )
+
+    if origin.rstrip("/") not in allowed_origins:
+        raise HTTPException(
+            status_code=403,
+            detail="Request origin not allowed."
+        )
 
 
 @lru_cache(maxsize=1)
