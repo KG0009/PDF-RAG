@@ -79,21 +79,21 @@ PDF-RAG/
 ├── .gitignore
 ├── .env                            # Local only; never commit
 ├── frontend/
-│   ├── index.html                  # Login, chat page, 3D intro markup
-│   ├── style.css                   # Responsive styling and animations
-│   └── script.js                   # Frontend state and API calls
+│   ├── index.html                  
+│   ├── style.css                  
+│   └── script.js                  
 ├── src/
-│   ├── ingestion.py                # JSONL rule chunking
-│   ├── embeddings.py               # Multilingual embeddings + FAISS index
-│   ├── retriever.py                # Semantic rule search
-│   ├── generator.py                # Context-aware Gemini RAG answers
-│   └── api.py                      # FastAPI, Firebase auth and Firestore
+│   ├── ingestion.py                
+│   ├── embeddings.py               
+│   ├── retriever.py                
+│   ├── generator.py               
+│   └── api.py                      
 └── data/
     ├── DATA_DICTIONARY.md
     ├── bhumi_vikas_rules.jsonl
     ├── bhumi_vikas_rules_fulltext_by_page.txt
-    ├── bvn06032025E.pdf           # English source PDF
-    ├── bvn06032025H.pdf           # Hindi source PDF
+    ├── bvn06032025E.pdf           
+    ├── bvn06032025H.pdf           
     └── processed/                  # Generated locally; ignored by Git
         ├── chunks.jsonl
         ├── rules.faiss
@@ -341,18 +341,6 @@ The application includes several protective measures, but **the current code sho
 | A follow-up loses context | Continue in a saved conversation; the `/api/ask` request should include its `chat_id`. |
 | Answer says `needs_verification` | Check the relevant rule and its tables directly in the official PDF. |
 
-## Further development
-
-Potential improvements include structured extraction and independent verification of numerical tables, precise chunk-to-page citation mapping, expanded automated evaluation, stronger deployment authentication/abuse protection, and support for later amendments.
-
 ## Repository
 
 [KG0009/PDF-RAG](https://github.com/KG0009/PDF-RAG)
-
-## Disclaimer
-
-Bhumi Vikas Sahayak is an independent informational software project. It is **not affiliated with or endorsed by a government authority**, and generated responses should not be used as the sole basis for building permissions, regulatory submissions, or legal decisions. Always consult the **latest official Madhya Pradesh rules, amendments, and competent authorities**.
-
-## License
-
-No license is specified here. If the project is intended for public reuse, add a `LICENSE` file describing the permissions granted to others.
